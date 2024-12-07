@@ -18,7 +18,7 @@ export function Smoke({ texture, ...props }) {
   perlinTexture.repeat.set(5, 5); // Adjust this based on how many times you want the texture to repeat
 
  
-  const planeGeometry = new THREE.PlaneGeometry(30, 30, 900, 900); // 50x50 subdivisions
+  const planeGeometry = new THREE.PlaneGeometry(30, 30, 20, 20); // 50x50 subdivisions
 
   
   // Custom Vertex Shader

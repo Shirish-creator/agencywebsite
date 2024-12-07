@@ -58,8 +58,8 @@ export function Pole(props) {
         ref={meshRef}
         geometry={nodes.Pole.geometry}
         material={emissiveMaterial} // Apply the emissive material
-        scale={[0.2, 3, 2.2]}
-        position={[0, -2.8,8]}
+        scale={[0.2, 3, 2.5]}
+        position={[0, -3.9,8]}
         rotation={[0, -Math.PI / 2, 0]}
         castShadow
         receiveShadow

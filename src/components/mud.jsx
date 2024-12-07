@@ -43,7 +43,7 @@ export default function Mud() {
 
   return (
     <>
-      <mesh position={[2, -5, 32]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[2, -7, 32]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[100, 50]} />
         <MeshReflectorMaterial
           metalness={1}
