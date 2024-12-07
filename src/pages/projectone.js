@@ -7,7 +7,6 @@ import { useFrame } from "react-three-fiber";
 import Script from "next/script";
 import Hotjar from '@hotjar/browser';
 import Stats from "stats.js";
-import { Effect } from "@/components/fluidsimulation";
 import Link from "next/link";
 
 

@@ -86,7 +86,7 @@ const Threed = () => {
         <PerspectiveCamera
           ref={cameraref}
           makeDefault
-          position={ [0, -1, 48]}
+          position={isMobile ? [0.5, -3.8, 58] : [0, -1, 48]}
         />
         <color args={["#020608"]} attach="background" />
         <Suspense fallback={null}>
