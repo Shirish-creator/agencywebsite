@@ -1,169 +1,111 @@
-import React from 'react';
-import { useGLTF, useTexture,Html, RenderCubeTextur, MeshReflectorMaterial } from '@react-three/drei';
-import { Bloom, DepthOfField, EffectComposer, Glitch, Noise, Vignette,SSAO, SMAA, Selection, Outline } from '@react-three/postprocessing';
-import { Bounds } from '@react-three/drei';
-import * as THREE from 'three';
-import { useFrame } from "react-three-fiber";
-import { useRef,useState,useEffect } from 'react';
-import { OrbitControls } from '@react-three/drei';
-import { TransformControls, PivotControls,Environment } from '@react-three/drei';
-import { useControls } from 'leva';
-import { BlendFunction, Resizer, KernelSize } from 'postprocessing'
-import * as TWEEN from '@tweenjs/tween.js'
-import Computer from './computer';
-import Floppy from './floppy';
-import { Iphone } from './Iphone';
-import { Playstation } from './Playstation';
-import { useThree } from 'react-three-fiber';
-import { PerspectiveCamera } from '@react-three/drei';
-import { ChromaticAberration } from '@react-three/postprocessing'
-import { Grid } from '@react-three/postprocessing'
-import { ToneMapping } from '@react-three/postprocessing'
-import { Miles } from './Miles';
-import { Omnitrix } from './Omnitrix';
-import { Floor } from './Floor';
+import React, { useRef, useState, useEffect,forwardRef } from 'react';
 
-const Scene = ({ orbitControlsActive,cameraStart, handleOrbitControlsToggle,handleUiControlsToggle,showUiControls,handleCameraStart  }) => {
-  const mesh = useRef();
+import { useFrame,useThree } from '@react-three/fiber';
+import { EffectComposer, GodRays,Bloom,Noise,DepthOfField,Pixelation,Scanline,Vignette  } from '@react-three/postprocessing';
+import { BlendFunction, Resizer, KernelSize,Resolution  } from 'postprocessing';
+import { Pole } from './Pole';
+import wavyBumpMap from '../../public/waterbump.jpg'; // Add the path to your bump map texture
+import { TextureLoader } from 'three'; // Import TextureLoader
+import Water from './Water';
+import { MeshReflectorMaterial } from '@react-three/drei';
+import Mud from './mud';
+import { Smoke } from './smoke';
+import { Camera } from './Camera';
+import { Fluid } from '@whatisjery/react-fluid-distortion';
+import { useConfig } from '@whatisjery/react-fluid-distortion';
 
-  const meshRef1 = useRef();
-  const cameraref=useRef();
-  const { camera } = useThree();
-  const mouse = useRef([0, 0]);
-  const originalCameraPosition = [0, 0, 40]; // Store the original camera position
-  const [playStationActive,setPlaystaionActive]=useState(false);
-  const [gameActive,setActiveGame]=useState("https://retrogamesonline.io/play/tekken-3");
+const Scene = forwardRef((props, ref) => {
+  const sunRef = useRef();
+  const [sunReady, setSunReady] = useState(false); // Track when sunRef is ready
+  const bumpTexture = new TextureLoader().load(wavyBumpMap);
+  // const config = useConfig();
+
+
+  // Ensure sunRef is initialized
+  useEffect(() => {
+    if (sunRef.current) {
+      setSunReady(true);
+    }
+  }, [sunRef.current]);
   
-  const PlaystationActivation=()=>{
-    setPlaystaionActive(prevState => !prevState);
-  }
-
-  const { nodes } = useGLTF('/MacintoshCell.glb');
-  const [isPortfolioActive, setIsPortfolioActive] = useState(false);
-
-  const bakedPlaneTexture=useTexture('/planebaked2.jpg')
-  const standardCameraPosition = { x: 0, y: 0, z: 40 };
-  const standardCameraRotation = { x: 0, y: 0, z: 0 };
-
-
-
-  const handlePortfolioActivation = () => {
-    setIsPortfolioActive(true);
-    // Do something else when the portfolio is activated
-   
-  };
-
- 
-  
-  
-
   return (
     <>
-    
-              <PerspectiveCamera ref={cameraref} makeDefault  position={[standardCameraPosition.x, standardCameraPosition.y, standardCameraPosition.z]} />
+     
+      {/* <OrbitControls/> */}
 
-              <Selection>
-    <EffectComposer multisampling={0} autoClear={false} enableNormalPass>
-    {/* <Vignette
-    offset={0.3}
-    darkness={0.8}/>
-    <Glitch
-    delay={[4,4]}
-    duration={[0.01, 0.03]}
-    strength={[2,2]}
-    /> */}
-   
-    
-    <Noise
-    
-    blendFunction={BlendFunction.MULTIPLY}
-    />
-    <ChromaticAberration
-blendFunction={BlendFunction.NORMAL} // blend mode
-offset={[0.0010, 0.0016]} // color offset
-/>
-<Outline blur visibleEdgeColor="white" edgeStrength={10} width={1000} />
-{/* 
-<Grid
-blendFunction={BlendFunction.OVERLAY} // blend mode
-scale={2.0} // grid pattern scale
-lineWidth={0.0} // grid pattern line width
-// size={{ 10, height }} // overrides the default pass width and height
+      {sunReady && (
+        <EffectComposer multisampling={0}>
+          <Noise premultiply  blendFunction={BlendFunction.ALPHA}/>
+          <Fluid 
+          // {...config} 
+          fluidColor='#306F87' 
+          backgroundColor='#000000' 
+          distortion={0.1} 
+          blend={0.008} 
+          intensity={2} 
+          curl={0.14} 
+          swirl={0} 
+          radius={0.1} 
+          force={3}  
+          />
+
+{/* <Vignette
+offset={0.6} // vignette offset
+darkness={0.9} // vignette darkness
+eskil={false} // Eskil's vignette technique
+blendFunction={BlendFunction.ALPHA} // blend mode
 /> */}
-{!playStationActive && 
-<>
-          {/* <Miles/> 
-          <Omnitrix/>   */}
-          {/* <Bloom/> */}
-</>
+          <Bloom
+          blendFunction={BlendFunction.ALPHA}
+            intensity={3} // The bloom intensity.
+            kernelSize={KernelSize.VERY_LARGE} // blur kernel size
+            luminanceThreshold={0} // luminance threshold. Raise this value to mask out darker elements in the scene.
+            luminanceSmoothing={0} // smoothness of the luminance threshold. Range is [0, 1]
+            mipmapBlur={true} // Enables or disables mipmap blur.
+            resolutionX={Resolution.AUTO_SIZE} // The horizontal resolution.
+            resolutionY={Resolution.AUTO_SIZE} // The vertical resolution.
+          />
+        </EffectComposer>
+      )}
 
-
-}          
-<Playstation gameActive={gameActive} setActiveGame={setActiveGame} PlaystationActivation={PlaystationActivation} handleUiControlsToggle={handleUiControlsToggle} orbitControlsActive={orbitControlsActive} standardCameraPosition={standardCameraPosition} standardCameraRotation={standardCameraRotation}/>
-
-  </EffectComposer>
-  </Selection>
-
-    
-
-          
-          
-    {orbitControlsActive && <OrbitControls 
-    
-    minPolarAngle={-Math.PI / 12}
-    maxPolarAngle={ Math.PI / 2}
-    maxDistance={45}
-    zoom0={true}
-    />
-    
-    }
-    
-    
+      <group ref={ref} position={[0, 0, 0]}>
+      
+        <group ref={sunRef}><Pole /></group>
         
-    <group ref={mesh} 
-     position={[0,0,0]}
-     >
-      
-      <Computer gameActive={gameActive} playStationActive={playStationActive} cameraStart={cameraStart} handleCameraStart={handleCameraStart} handleUiControlsToggle={handleUiControlsToggle} showUiControls={showUiControls} standardCameraPosition={standardCameraPosition} standardCameraRotation={standardCameraRotation} orbitControlsActive={orbitControlsActive}  isPortfolioActive={isPortfolioActive} />
-     
-      <Floppy handleUiControlsToggle={handleUiControlsToggle} showUiControls={showUiControls} standardCameraPosition={standardCameraPosition} standardCameraRotation={standardCameraRotation} orbitControlsActive={orbitControlsActive} onPortfolioActivate={handlePortfolioActivation}/>
+        
+
+       
+        <directionalLight
+  color="#1A3744"
+  position={[0,8, -10]}  // Directional light needs a position for its origin
+  intensity={10}             // Adjust intensity for the brightness
+  // castShadow               // Optional: Enables shadow casting
+ 
+/>
+
+<ambientLight intensity={1000} color={0xffffff} />  {/* Soft white light */}
+
+
   
- {/* original floor */}
-      <mesh
-        rotation={[0,0, 0]} // Rotate 180 degrees around the Y axis
-        scale={1} 
-        ref={meshRef1}
-        geometry={nodes.Plane.geometry}
-        position={[0.1,-7.20,-0.6]}
-        castShadow 
-        receiveShadow 
-      >
-     
-      
-     <meshStandardMaterial 
-      metalness={0.4}
-      roughness={0.5}
-      map={bakedPlaneTexture} map-flipY={false} 
-      ></meshStandardMaterial>
-    </mesh>
-    {/* <pointLight color="white" castShadow  position={[0, -2, 5]} 
-      intensity={isPortfolioActive? 200:600} 
-     distance={15} /> */}
-{/* 
-      <pointLight color="purple" castShadow  position={[15, -2, 5]}   intensity={500} distance={0} />
-      <pointLight color="orange" castShadow  position={[-10, -2, 5]}   intensity={400} distance={0} /> */}
-      {/* <Iphone/> */}
-        {/* <Floor/> */}
-    </group>
-    
-    
-    
+    <Mud/>
 
+        <Camera/>
+  <group>
+ 
+         <group position={[0,0,3]}> <Smoke texture={'/cloudperlinblue2.png'}/></group>
+         <group position={[6,1,0]}> <Smoke texture={'/cloudperlinblue10.png'}/></group>
+         <group position={[-10,0,0]}> <Smoke texture={'/cloudperlinblue10.png'}/></group>
 
+   <group position={[-6,0,2]}> <Smoke texture={'/cloudperlinblue1.png'}/></group> 
+     <group position={[2,2,3]}> <Smoke texture={'/cloudperlinblue1.png'}/></group>
+     <group position={[0,5,8]}> <Smoke texture={'/cloudperlinblue3.png'}/></group>
+     <group position={[0,10,8]}> <Smoke texture={'/cloudperlinblue3.png'}/></group>
+  
+  
+        </group>
+  </group>
     </>
   );
-};
-
-useGLTF.preload('/MacintoshCell.glb');
+});
 
 export default Scene;

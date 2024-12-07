@@ -1,88 +1,102 @@
 import { Canvas } from "react-three-fiber";
-import React, { useRef, useEffect } from "react";
-import { Suspense } from "react";
-import * as Three from "three";
-import Stats from "stats.js";
-import { NodeToyTick } from "@nodetoy/react-nodetoy";
-import LoadingScreen from "./Loader";
+import React, { Suspense, useEffect, useState, useRef } from "react";
 import Scene from "./Scene";
-import { useFrame } from "react-three-fiber";
+import { PerspectiveCamera, OrbitControls } from "@react-three/drei";
+import GSAP from "gsap";
 
-function StatsUpdater({ statsRef }) {
-  useFrame(() => {
-    statsRef.current?.begin();
-    statsRef.current?.end();
-  });
-  return null;
-}
+const Threed = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  const cameraref = useRef();
+  const mesh = useRef();
 
-export default function Threed({
-  handleCameraStart,
-  cameraStart,
-  orbitControlsActive,
-  handleOrbitControlsToggle,
-  handleUiControlsToggle,
-  showUiControls,
-  handleSetLoadedScreen,
-}) {
-  const canvasRef = useRef(null); // Ref for the canvas
-  const statsRef = useRef(null); // Ref for the Stats instance
+  const mouse = useRef({ x: 0, y: 0 });
 
+  // Detect window resize to toggle isMobile state
   useEffect(() => {
-    // Initialize Stats
-    const stats = new Stats();
-    stats.showPanel(0); // Show FPS panel
-    statsRef.current = stats;
-
-    // Append Stats to the canvas container
-    if (canvasRef.current) {
-      canvasRef.current.appendChild(stats.dom);
-    }
-
-    return () => {
-      // Clean up Stats DOM element
-      if (canvasRef.current) {
-        canvasRef.current.removeChild(stats.dom);
-      }
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
     };
+
+    handleResize(); // Initial check
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  return (
-    <>
-      <LoadingScreen
-        handleCameraStart={handleCameraStart}
-        handleSetLoadedScreen={handleSetLoadedScreen}
-      />
+  // Track mouse movement (only on desktop)
+  useEffect(() => {
+    if (!isMobile) {
+      const handleMouseMove = (event) => {
+        const x = (event.clientX / window.innerWidth) * 2 - 1;
+        const y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-      <div ref={canvasRef} style={{ height: "100vh", width: "100vw" }}>
-        <Canvas
-          gl={{
-            antialias: true,
-          }}
-          shadows
-          camera={{
-            fov: 110,
-            near: 0.5,
-            far: 1000,
-            position: [0, 1, 22],
-          }}
-        >
-          <color args={["#000000"]} attach="background" />
-          <NodeToyTick />
-          <Suspense>
-            <Scene
-              cameraStart={cameraStart}
-              orbitControlsActive={orbitControlsActive}
-              handleUiControlsToggle={handleUiControlsToggle}
-              showUiControls={showUiControls}
-              handleCameraStart={handleCameraStart}
-              handleOrbitControlsToggle={handleOrbitControlsToggle}
-            />
-          </Suspense>
-          {/* Add StatsUpdater inside the Canvas */}
-          <StatsUpdater statsRef={statsRef} />
-        </Canvas>
-      </div>
-    </>
+        mouse.current = { x, y };
+      };
+
+      window.addEventListener("mousemove", handleMouseMove);
+      return () => window.removeEventListener("mousemove", handleMouseMove);
+    }
+  }, [isMobile]);
+
+  // Animate camera tilt based on mouse position (only on desktop)
+  useEffect(() => {
+    const updateTilt = () => {
+      if (!isMobile && mesh.current) {
+        const { x, y } = mouse.current;
+
+        const tiltY = x * 0.085;
+        const tiltZ = x * 0.05;
+
+        // Animate camera rotation with GSAP
+        GSAP.to(mesh.current.rotation, {
+          y: tiltY,
+          z: tiltZ,
+          duration: 0.15,
+          ease: "power1.in",
+        });
+      }
+
+      requestAnimationFrame(updateTilt);
+    };
+
+    updateTilt();
+  }, [isMobile]);
+
+  return (
+    <div
+      style={{
+        height: "100vh",
+        position: "static",
+        width: "100%",
+        overflow: "hidden",
+      }}
+    >
+      <Canvas
+        gl={{
+          antialias: true,
+        }}
+        shadows
+        camera={{
+          fov: 80,
+          near: 0.5,
+          far: 1000,
+          position: [0, 1, 22],
+        }}
+      >
+        {/* <OrbitControls/> */}
+        <PerspectiveCamera
+          ref={cameraref}
+          makeDefault
+          position={ [0, -1, 48]}
+        />
+        <color args={["#020608"]} attach="background" />
+        <Suspense fallback={null}>
+          <group>
+            <Scene ref={mesh} />
+          </group>
+        </Suspense>
+      </Canvas>
+    </div>
   );
-}
+};
+
+export default Threed;
