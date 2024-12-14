@@ -3,25 +3,91 @@
 import { Canvas } from "react-three-fiber";
 import React, { Suspense, useEffect, useState, useRef } from "react";
 import SceneCamera from "./Scenecamera";
-import { PerspectiveCamera, OrbitControls } from "@react-three/drei";
+import { PerspectiveCamera, OrbitControls,useTexture  } from "@react-three/drei";
 import GSAP from "gsap";
-import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
+import { EffectComposer, Bloom, Noise, Vignette } from '@react-three/postprocessing';
 import { BlendFunction, KernelSize, Resolution } from 'postprocessing';
 import { Fluid } from '@whatisjery/react-fluid-distortion';
+
 import Mud from './mud';
 import { Smoke } from './smoke';
 import { Pole } from './Pole';
 import { TextureLoader } from 'three';
 import wavyBumpMap from '../../public/waterbump.jpg';
 import Sceneiphone from "./Sceneiphone";
+import { useRouter } from "next/router";  // Use useRouter hook from next/router
+import TWEEN from '@tweenjs/tween.js';
+import { useControls } from 'leva';
+
+
+const NewScene = () => {
+  const [transitionProgress, setTransitionProgress] = useState(0);
+  const [textureOpacity, setTextureOpacity] = useState(1); // State to control texture opacity
+  const transitionTexture = useTexture('./perlintransition.png');
+  const transitionRef = useRef(null);
+
+  // Leva Control for Transition Progress
+  const { transition } = useControls({
+    transition: { value: 0, min: 0, max: 1, step: 0.01 },
+  });
+
+  useEffect(() => {
+    // Create a tween to animate the transition progress
+    const tween = new TWEEN.Tween({ progress: 0 })
+      .to({ progress: 1 }, 2000)  // 2 seconds transition
+      .onUpdate((obj) => setTransitionProgress(obj.progress))
+      .yoyo(true)
+      .repeat(Infinity)
+      .start();
+
+    return () => tween.stop(); // Cleanup the tween on component unmount
+  }, []);
+
+  useEffect(() => {
+    // Update Leva's control state when transition progresses
+    setTransitionProgress(transition);
+  }, [transition]);
+
+  useEffect(() => {
+    // When transition is complete, start fading out the texture opacity
+    if (transitionProgress === 1) {
+      const fadeOutTween = new TWEEN.Tween({ opacity: 1 })
+        .to({ opacity: 0 }, 1000) // Fade out in 1 second
+        .onUpdate((obj) => setTextureOpacity(obj.opacity))
+        .start();
+    }
+  }, [transitionProgress]);
+
+  return (
+    <>
+      {/* Transition effect */}
+      <mesh position={[0, 0, 35]} scale={20}>
+        <planeGeometry args={[2, 2]} />
+        <meshBasicMaterial 
+          map={transitionTexture} 
+          transparent={true} 
+          opacity={textureOpacity * transitionProgress}  // Gradually decrease opacity after transition completes
+        />
+      </mesh>
+
+      {/* Render Scene A or B based on the transition */}
+      <group style={{ opacity: transitionProgress }}>
+        {transitionProgress < 0.5 ? <SceneCamera /> : <Sceneiphone />}
+      </group>
+    </>
+  );
+};
+
+
+
 
 const Threed = () => {
   
   const [isMobile, setIsMobile] = useState(false);
-  const [transition, setTransition] = useState(0); // Transition state
   const cameraref = useRef();
   const mesh = useRef();
   const bumpTexture = new TextureLoader().load(wavyBumpMap);
+  const router = useRouter();  // Initialize the router hook
 
   const smokeData = [
     { position: [0, 0, 3], texture: '/cloudperlinblue2.png' },
@@ -79,14 +145,35 @@ const Threed = () => {
     updateTilt();
   }, [isMobile]);
 
-  // Handle transition with a simple fade effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTransition((prev) => (prev === 0 ? 1 : 0)); // Toggle transition
-    }, 5000); // Change scene every 5 seconds
+//  // Listen for route change events
+//  useEffect(() => {
+//   const handleRouteChange = (url) => {
+//     if (url === "/projectone" && cameraref.current) {
+//       GSAP.to(cameraref.current.position, {
+//         z: 38, // Rotate z-axis to 12
+//         duration: 1.5,
+//         ease: "power2.inOut",
+//       },
+    
+//     );
+//     }
+//     if (url === "/" && cameraref.current) {
+//       GSAP.to(cameraref.current.position, {
+//         z: 48, // Rotate z-axis to 12
+//         duration: 1.5,
+//         ease: "power2.inOut",
+//       });
+//     }
+//   };
 
-    return () => clearInterval(interval);
-  }, []);
+//   // Subscribe to route change event
+//   router.events.on("routeChangeComplete", handleRouteChange);
+
+//   // Clean up the event listener on component unmount
+//   return () => {
+//     router.events.off("routeChangeComplete", handleRouteChange);
+//   };
+// }, [router.events]);  // Make sure to include router.events in the dependency array
 
   return (
     <div style={{ height: "100vh", width: "100%", overflow: "hidden", position: "static" }}>
@@ -95,8 +182,11 @@ const Threed = () => {
         shadows
         camera={{ fov: 80, near: 0.5, far: 1000, position: [0, 1, 22] }}
       >
+        
         <PerspectiveCamera ref={cameraref} makeDefault position={isMobile ? [0.5, -3.8, 58] : [0, -1, 48]} />
         <color args={["#020608"]} attach="background" />
+        {/* <fog args={["rgba(2, 6, 8, 1)", 30, 40]} attach="fog" /> */}
+
         <Suspense fallback={null}>
           <EffectComposer multisampling={0}>
             <Fluid
@@ -110,9 +200,15 @@ const Threed = () => {
               radius={0.1}
               force={3}
             />
+            <Vignette
+            offset={0.6} // vignette offset
+            darkness={.9} // vignette darkness
+            eskil={false} // Eskil's vignette technique
+            blendFunction={BlendFunction.ALPHA} // blend mode
+            />
             <Bloom
               blendFunction={BlendFunction.ALPHA}
-              intensity={3}
+              intensity={5}
               kernelSize={KernelSize.HUGE}
               luminanceThreshold={0}
               luminanceSmoothing={0}
@@ -120,7 +216,10 @@ const Threed = () => {
               resolutionX={Resolution.AUTO_SIZE}
               resolutionY={Resolution.AUTO_SIZE}
             />
-            <Noise blendFunction={BlendFunction.MULTIPLY} />
+            <Noise 
+            premultiply
+             blendFunction={BlendFunction.ADD} 
+             />
           </EffectComposer>
 
           <group>
@@ -138,13 +237,14 @@ const Threed = () => {
               ))}
             </group>
             <Mud />
-            {/* Transition Effect */}
-            <group style={{ opacity: transition }}>
+            {/* <Sceneiphone /> */}
               {/* <SceneCamera ref={mesh} /> */}
-              <Sceneiphone />
-              
-            </group>
+              <group>
+   
+    </group>
+        
           </group>
+          <NewScene/>
         </Suspense>
       </Canvas>
     </div>

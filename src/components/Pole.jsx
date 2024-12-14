@@ -41,7 +41,7 @@ export function Pole(props) {
   const handlePointerOut = () => {
     if (meshRef.current) {
       GSAP.to(meshRef.current.material, {
-        emissiveIntensity: 2, // Reset intensity when hover ends
+        emissiveIntensity: 3, // Reset intensity when hover ends
         duration: 0.4,
         ease: 'power2.out',
       });
@@ -58,7 +58,7 @@ export function Pole(props) {
         ref={meshRef}
         geometry={nodes.Pole.geometry}
         material={emissiveMaterial} // Apply the emissive material
-        scale={[0.2, 3, 2.5]}
+        scale={[0.2, 3.2, 2.5]}
         position={[0, -3.9,8]}
         rotation={[0, -Math.PI / 2, 0]}
         castShadow
