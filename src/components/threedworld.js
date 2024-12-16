@@ -292,38 +292,27 @@ const niceref=useRef()
 
 				
           <group>
-        <Sparkles
-      count={20}
+            {!isMobile?<Sparkles
+      count={30}
       size={7}
       scale={[40,16,4]}
-      position-y={10}
-      position-z={20}
-      position-x={-20}
+      position-y={6}
+      position-z={5}
 
       color={'rgb(15, 89, 126)'}
       speed={1}
-    />
-   
-    <Sparkles
-      count={4}
-      size={2}
-      scale={[40,16,4]}
-      // position-y={15}
-      position-z={20}
-      position-x={-30}
-      color={'rgb(15, 89, 126)'}
-      speed={1}
-    />
-    <Sparkles
-      count={5}
-      size={5}
-      scale={[10,16,4]}
-      position-y={-2}
-      position-z={25}
-      position-x={10}
-      color={'rgb(15, 89, 126)'}
-      speed={0.9}
-    />
+    />:<Sparkles
+    count={10}
+    size={7}
+    scale={[40,16,4]}
+    position-y={6}
+    position-z={2}
+
+    color={'rgb(15, 89, 126)'}
+    speed={1}
+  />}
+        
+
       </group>
           <group ref={niceref}>
           <WaterSurfaceComplex

@@ -12,7 +12,6 @@ const Threed = dynamic(() => import("@/components/threedworld"), { ssr: false })
 export default function App({ Component, pageProps }) {
   const router = useRouter();
   const [projectTrigger,setProjectTrigger]=useState(false)
-  console.log(projectTrigger)
 
   const triggerProject = () => {
     setProjectTrigger((prev) => !prev);
