@@ -30,28 +30,28 @@ export function Iphone(props) {
 
   return (
     <group  {...props} dispose={null}>
-      <group  rotation={[-1.8, 0.3, 5.2]} scale={0.7} position={[0,0,20]}>
+      <group  rotation={[-1.8, 0.3, 5.2]} scale={0.7} position={[0,0,15]}>
         <group ref={iphoneGroupRef} rotation={[Math.PI / 2, 1, 0]}>
           <mesh geometry={nodes.Object_12.geometry} material={basicMaterial} />
           <mesh geometry={nodes.Object_14.geometry} material={basicMaterial} />
           <mesh geometry={nodes.Object_16.geometry} material={basicMaterial} />
-          <ambientLight 
+          {/* <ambientLight 
             position={[0, 0, 10]}  // Position the light above the object (adjust Y for height)
-            intensity={0.001}          // Light intensity
+            intensity={0.15}          // Light intensity
             color={0xFFFFFF}       // White light color
             distance={1}          // How far the light reaches
             decay={20}              // Controls how quickly the light fades over distance
-          />
+          /> */}
           <mesh geometry={nodes.Object_18.geometry} >
           <MeshReflectorMaterial
           metalness={0}
-          blur={[0, 200]} // Blur ground reflections (width, height), 0 skips blur
+          blur={[0, 20]} // Blur ground reflections (width, height), 0 skips blur
           depthToBlurRatioBias={2.25} // Bias factor for depth-to-blur calculation
           mixStrength={100} // Strength of the reflections
           mixContrast={0.8} // Contrast of the reflections
           roughness={0.14}
           resolution={500}
-          mirror={4}
+          mirror={1}
           mixBlur={-0.6} // How much blur mixes with surface roughness
           reflectorOffset={0} // Offset for the virtual camera
           reflectivity={1}

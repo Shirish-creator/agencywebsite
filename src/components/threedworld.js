@@ -3,11 +3,17 @@
 import { Canvas } from "react-three-fiber";
 import React, { Suspense, useEffect, useState, useRef } from "react";
 import SceneCamera from "./Scenecamera";
-import { PerspectiveCamera, OrbitControls,useTexture  } from "@react-three/drei";
+import { PerspectiveCamera, OrbitControls,useTexture,Sparkles  } from "@react-three/drei";
 import GSAP from "gsap";
 import { EffectComposer, Bloom, Noise, Vignette } from '@react-three/postprocessing';
 import { BlendFunction, KernelSize, Resolution } from 'postprocessing';
 import { Fluid } from '@whatisjery/react-fluid-distortion';
+import { Perf } from 'r3f-perf';
+import WaterSurfaceSimple from './WaterSurface/WaterSurfaceSimple';
+import WaterSurfaceComplex from './WaterSurface/WaterSurfaceComplex';
+import { useControls, folder } from 'leva';
+import FluidFX from './WaterSurface/InteractiveFX/FluidFX';
+import RippleFX from './WaterSurface/InteractiveFX/RippleFX';
 
 import Mud from './mud';
 import { Smoke } from './smoke';
@@ -17,7 +23,7 @@ import wavyBumpMap from '../../public/waterbump.jpg';
 import Sceneiphone from "./Sceneiphone";
 import { useRouter } from "next/router";  // Use useRouter hook from next/router
 import TWEEN from '@tweenjs/tween.js';
-import { useControls } from 'leva';
+
 
 
 const NewScene = () => {
@@ -27,9 +33,9 @@ const NewScene = () => {
   const transitionRef = useRef(null);
 
   // Leva Control for Transition Progress
-  const { transition } = useControls({
-    transition: { value: 0, min: 0, max: 1, step: 0.01 },
-  });
+  // const { transition } = useControls({
+  //   transition: { value: 0, min: 0, max: 1, step: 0.01 },
+  // });
 
   useEffect(() => {
     // Create a tween to animate the transition progress
@@ -45,8 +51,8 @@ const NewScene = () => {
 
   useEffect(() => {
     // Update Leva's control state when transition progresses
-    setTransitionProgress(transition);
-  }, [transition]);
+    setTransitionProgress(0);
+  }, [0]);
 
   useEffect(() => {
     // When transition is complete, start fading out the texture opacity
@@ -72,7 +78,8 @@ const NewScene = () => {
 
       {/* Render Scene A or B based on the transition */}
       <group style={{ opacity: transitionProgress }}>
-        {transitionProgress < 0.5 ? <SceneCamera /> : <Sceneiphone />}
+      {/* <Sceneiphone /> */}
+         <SceneCamera /> 
       </group>
     </>
   );
@@ -88,18 +95,76 @@ const Threed = () => {
   const mesh = useRef();
   const bumpTexture = new TextureLoader().load(wavyBumpMap);
   const router = useRouter();  // Initialize the router hook
+const niceref=useRef()
 
+   // Update mouse position on movement
+   useEffect(() => {
+    if (!isMobile) {
+      const handleMouseMove = (event) => {
+        // Normalize mouse position to [-1, 1]
+        const x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.current = { x }; // Update the current mouse position
+      };
+
+      window.addEventListener("mousemove", handleMouseMove);
+      return () => window.removeEventListener("mousemove", handleMouseMove);
+    }
+  }, [isMobile]);
+
+  // Animate the camera rotation based on mouse movement
+  useEffect(() => {
+    const animateCamera = () => {
+      if (niceref.current) {
+        const targetYRotation = mouse.current.x * 0.05; // Adjust rotation sensitivity
+        GSAP.to(niceref.current.rotation, {
+          y: targetYRotation*2, // Rotate around the Y-axis
+          z: targetYRotation, // Rotate around the Y-axis
+
+          duration: 4, // Smooth animation duration
+          ease: "power3.out", // Easing effect
+        });
+      }
+
+      requestAnimationFrame(animateCamera);
+    };
+
+    animateCamera();
+  }, []);
   const smokeData = [
-    { position: [0, 0, 3], texture: '/cloudperlinblue2.png' },
-    { position: [6, 1, 0], texture: '/cloudperlinblue10.png' },
-    { position: [-10, 0, 0], texture: '/cloudperlinblue10.png' },
-    { position: [-6, 0, 2], texture: '/cloudperlinblue1.png' },
-    { position: [2, 2, 3], texture: '/cloudperlinblue1.png' },
-    { position: [0, 5, 8], texture: '/cloudperlinblue3.png' },
-    { position: [0, 10, 8], texture: '/cloudperlinblue3.png' },
+  
+    { position: [0, 0, 5], texture: '/cloudperlinblue1.png' },
+    { position: [0, -7, 4], texture: '/cloudperlinblue3.png' },
+
+
   ];
 
   const mouse = useRef({ x: 0, y: 0 });
+
+
+  const FX_RENDER = (
+		<>
+				{/* <RippleFX
+					alpha={0.8}
+					// fadeout_speed={0}
+					// frequency={20}
+					// rotation={2}
+					scale={0.1}
+          
+				/> */}
+		
+
+				{/* <FluidFX
+					densityDissipation={controls.densityDissipation}
+					velocityDissipation={controls.velocityDissipation}
+					velocityAcceleration={controls.velocityAcceleration}
+					pressureDissipation={controls.pressureDissipation}
+					splatRadius={controls.splatRadius}
+					curlStrength={controls.curlStrength}
+					pressureIterations={controls.pressureIterations}
+				/> */}
+		</>
+	);
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -182,12 +247,15 @@ const Threed = () => {
         shadows
         camera={{ fov: 80, near: 0.5, far: 1000, position: [0, 1, 22] }}
       >
+              {/* <Perf position={'top-left'} /> */}
         
-        <PerspectiveCamera ref={cameraref} makeDefault position={isMobile ? [0.5, -3.8, 58] : [0, -1, 48]} />
-        <color args={["#020608"]} attach="background" />
-        {/* <fog args={["rgba(2, 6, 8, 1)", 30, 40]} attach="fog" /> */}
-
+        <PerspectiveCamera ref={cameraref} makeDefault position={isMobile ? [0.5, -4, 60] : [0, -1, 50]} />
+        <color args={["#030608"]} attach="background" />
+        <fog args={["rgba(2, 6, 8, 1)", 30, 10]} attach="fog" />
+      {/* <OrbitControls/> */}  
+      
         <Suspense fallback={null}>
+          
           <EffectComposer multisampling={0}>
             <Fluid
               fluidColor='#306F87'
@@ -222,29 +290,95 @@ const Threed = () => {
              />
           </EffectComposer>
 
+				
           <group>
+        <Sparkles
+      count={20}
+      size={7}
+      scale={[40,16,4]}
+      position-y={10}
+      position-z={20}
+      position-x={-20}
+
+      color={'rgb(15, 89, 126)'}
+      speed={1}
+    />
+   
+    <Sparkles
+      count={4}
+      size={2}
+      scale={[40,16,4]}
+      // position-y={15}
+      position-z={20}
+      position-x={-30}
+      color={'rgb(15, 89, 126)'}
+      speed={1}
+    />
+    <Sparkles
+      count={5}
+      size={5}
+      scale={[10,16,4]}
+      position-y={-2}
+      position-z={25}
+      position-x={10}
+      color={'rgb(15, 89, 126)'}
+      speed={0.9}
+    />
+      </group>
+          <group ref={niceref}>
+          <WaterSurfaceComplex
+					dimensions={400}
+					position={[0,-7.5,0]}
+					width={200}
+					length={200}
+					fxDistortionFactor={100}
+					fxDisplayColorAlpha={0.67}
+					flowSpeed={0.0}
+					flowDirection={[0.9,1.5]}
+					reflectivity={0.2}
+					scale={10.0}>
+					{FX_RENDER}
+				</WaterSurfaceComplex>
             <directionalLight
               color="#1A3744"
-              position={[0, 8, -10]}
-              intensity={5}
+              position={[0, 5, -5]}
+              intensity={50}
             />
+             <directionalLight
+              color="#1A3744"
+              position={[0, 0, -20]}
+              intensity={20}
+            />
+            <ambientLight
+              color="#1A3744"
+              position={[0, -5, 5]}
+              intensity={ 2}
+            />
+          
+            {/* Black Standard Mesh Box */}
+        
             <Pole />
-            <group>
+            <mesh position={[0, -5, 2.5]} castShadow receiveShadow>
+          <boxGeometry args={[300, 500, 5]} /> {/* Box dimensions: width, height, depth */}
+          <meshStandardMaterial color={"#000a0a"} /> {/* Black color */}
+        </mesh>
+            <NewScene/>
+
+            <group >
               {smokeData.map((data, index) => (
                 <group key={index} position={data.position}>
                   <Smoke texture={data.texture} />
                 </group>
+                
               ))}
             </group>
-            <Mud />
-            {/* <Sceneiphone /> */}
-              {/* <SceneCamera ref={mesh} /> */}
+            {/* <Mud /> */}
+           
               <group>
    
     </group>
         
           </group>
-          <NewScene/>
         </Suspense>
       </Canvas>
     </div>

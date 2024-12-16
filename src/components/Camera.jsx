@@ -18,16 +18,18 @@ export function Camera(props) {
   useEffect(() => {
     // GSAP animation to move the camera up and down
     gsap.to(cameraGroupRef.current.position, {
-      y: -2,               // Move up by 2 units
+      y: -5.5,               // Move up by 2 units
       duration: 2,        // Duration of the upward movement
       yoyo: true,         // Make it go back to the original position
       repeat: -1,         // Infinite loop
       ease: 'power1.inOut' // Smooth easing for the animation
     });
-  }, []);
+  }
+  
+  , []);
   return (
     <group {...props} dispose={null}>
-      <group ref={cameraGroupRef} rotation={[-Math.PI / 2, 0, 0.06]} position={[0, -2.5, 20]} scale={1.2}>
+      <group ref={cameraGroupRef} rotation={[-Math.PI / 2, 0, 0.06]} position={[0, -4.5, 10]} scale={1.6}>
         <group rotation={[Math.PI / 3, -1.2, -0.8]}>
           <mesh geometry={nodes.defaultMaterial.geometry} material={basicMaterial} />
           <mesh geometry={nodes.defaultMaterial_1.geometry} material={basicMaterial} />

@@ -23,10 +23,10 @@ export default function Home() {
     </Head>
     
   
-    <section className="w-100 h-screen flex   relative px-44" >
-   <div className="text-white" style={{pointerEvents:'all'}}>
+    <section className="w-100 h-fit flex   relative px-44" >
+   <div className="text-white flex flex-row  gap-8 py-6" style={{pointerEvents:'all'}}>
      
-      <p className="text-white">Hello</p>
+      <p className="text-white">Company Logo</p>
       <Link href={'projectone'}> Project One</Link>
    </div>
     </section>
