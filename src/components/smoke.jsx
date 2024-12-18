@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { TextureLoader } from "three";
 import { useLoader } from "@react-three/fiber";
 
-export function Smoke({ texture, ...props }) {
+export function Smoke({ texture, alphaValue=0.05, ...props}) {
 
   const perlinTexture = useLoader(TextureLoader, texture); // Replace with the path to your normal map texture
 
@@ -39,7 +39,7 @@ export function Smoke({ texture, ...props }) {
       float a = random(i);
       float b = random(i + vec2(1.0, 0.0));
       float c = random(i + vec2(0.0, 0.0));
-      float d = random(i + vec2(1.0, 1.0));
+      float d = random(i + vec2(1.0, 0.0));
 
       // Smoothstep for interpolation
       vec2 u = f * f * (3.0 - 2.0 * f);
@@ -52,7 +52,7 @@ export function Smoke({ texture, ...props }) {
       vUv = uv;
 
       // Add time-varying noise to the Z-axis
-      float displacement = noise(uv * 10.0 + uTime * 1.2) * 2.5; // Scale and animate noise
+      float displacement = noise(uv * 10.0 + uTime * 2.2) * 2.5; // Scale and animate noise
       vec3 newPosition = position;
       newPosition.z += displacement; // Displace only in Z-axis
 
@@ -68,6 +68,7 @@ export function Smoke({ texture, ...props }) {
     varying vec3 vPosition;
     uniform float uTime;
     uniform sampler2D uPerlinTexture;
+    uniform float uAlpha;  // New uniform for falloff control
 
     void main() {
       vec2 center = vec2(0.5, 0.5); // Center of the containment area
@@ -87,9 +88,9 @@ export function Smoke({ texture, ...props }) {
       float falloff = smoothstep(0.3, 0.1, distanceToCenter); // Controls edge fade
 
       // Add emissive color to create a glow effect
-      vec3 emissiveColor = vec3(0.0, 0.8, 0.6); // Greenish emissive color
+      vec3 emissiveColor = vec3(0.0706, 0.4627, 0.6667); // Greenish emissive color
 
-      gl_FragColor = vec4(texColor.rgb * emissiveColor, texColor.b * falloff * 0.03); // Apply emissive glow with falloff
+      gl_FragColor = vec4(texColor.rgb * emissiveColor, texColor.b * falloff * uAlpha); // Apply emissive glow with falloff
     }
   `;
 
@@ -100,6 +101,7 @@ export function Smoke({ texture, ...props }) {
     uniforms: {
       uPerlinTexture: new THREE.Uniform(perlinTexture),
       uTime: new THREE.Uniform(0),
+      uAlpha:new THREE.Uniform(alphaValue)
     },
     side: THREE.DoubleSide, // Make sure both sides are visible
     transparent: true,
@@ -119,8 +121,8 @@ export function Smoke({ texture, ...props }) {
       <mesh
         geometry={planeGeometry}
         material={shaderMaterial}
-        position={[0, 0, 2]} // Position the plane below the pole
-        rotation={[.4, 0, 0]} // Rotate the plane to be horizontal
+        position={[0, 0, 1]} // Position the plane below the pole
+        rotation={[0, 0, 0]} // Rotate the plane to be horizontal
         receiveShadow
       />
     </group>

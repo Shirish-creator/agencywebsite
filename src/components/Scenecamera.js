@@ -17,7 +17,7 @@ import { Camera } from './Camera';
        
         
 
-        <group  position={[0, 0, 0]}>
+        <group  position={[0, 0, 2]}>
         
 
           <Camera/>

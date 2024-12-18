@@ -2,3 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+body{
+  transform: translateZ(0);
+  animation-name: 'repaint';
+  animation-duration: 3s;
+  animation-iteration-count: infinite;
+  animation-play-state: running;
+  animation-timing-function: linear;
+  background-color: black;
+}
+
+@keyframes repaint {from { zoom: 99.99999%; } to { zoom: 99.99998%; }}

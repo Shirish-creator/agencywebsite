@@ -32,37 +32,6 @@ const NewScene = () => {
   const transitionTexture = useTexture('./perlintransition.png');
   const transitionRef = useRef(null);
 
-  // Leva Control for Transition Progress
-  // const { transition } = useControls({
-  //   transition: { value: 0, min: 0, max: 1, step: 0.01 },
-  // });
-
-  useEffect(() => {
-    // Create a tween to animate the transition progress
-    const tween = new TWEEN.Tween({ progress: 0 })
-      .to({ progress: 1 }, 2000)  // 2 seconds transition
-      .onUpdate((obj) => setTransitionProgress(obj.progress))
-      .yoyo(true)
-      .repeat(Infinity)
-      .start();
-
-    return () => tween.stop(); // Cleanup the tween on component unmount
-  }, []);
-
-  useEffect(() => {
-    // Update Leva's control state when transition progresses
-    setTransitionProgress(0);
-  }, [0]);
-
-  useEffect(() => {
-    // When transition is complete, start fading out the texture opacity
-    if (transitionProgress === 1) {
-      const fadeOutTween = new TWEEN.Tween({ opacity: 1 })
-        .to({ opacity: 0 }, 1000) // Fade out in 1 second
-        .onUpdate((obj) => setTextureOpacity(obj.opacity))
-        .start();
-    }
-  }, [transitionProgress]);
 
   return (
     <>
@@ -88,7 +57,7 @@ const NewScene = () => {
 
 
 
-const Threed = () => {
+const Threed = ({buttonTrigger}) => {
   
   const [isMobile, setIsMobile] = useState(false);
   const cameraref = useRef();
@@ -96,6 +65,8 @@ const Threed = () => {
   const bumpTexture = new TextureLoader().load(wavyBumpMap);
   const router = useRouter();  // Initialize the router hook
 const niceref=useRef()
+
+
 
    // Update mouse position on movement
    useEffect(() => {
@@ -116,10 +87,11 @@ const niceref=useRef()
     const animateCamera = () => {
       if (niceref.current) {
         const targetYRotation = mouse.current.x * 0.05; // Adjust rotation sensitivity
+        const targetXRotation=mouse.current.y*0.05
         GSAP.to(niceref.current.rotation, {
           y: targetYRotation*2, // Rotate around the Y-axis
           z: targetYRotation, // Rotate around the Y-axis
-
+          x:targetXRotation,
           duration: 4, // Smooth animation duration
           ease: "power3.out", // Easing effect
         });
@@ -131,11 +103,16 @@ const niceref=useRef()
     animateCamera();
   }, []);
   const smokeData = [
+    { position: [0, -2, 5], texture: '/cloudperlinblue3.png',alphaValue:0.01 },
+
+    { position: [0, -2, 6], texture: '/cloudperlinblue3.png',alphaValue:0.015 },
+
+
+  ];
+  const smokeDataSecond = [
+
+    { position: [0, -9, 20], texture: '/smokeperlin.jpg',alphaValue:0.04 },
   
-    { position: [0, 0, 5], texture: '/cloudperlinblue1.png' },
-    { position: [0, -7, 4], texture: '/cloudperlinblue3.png' },
-
-
   ];
 
   const mouse = useRef({ x: 0, y: 0 });
@@ -241,7 +218,9 @@ const niceref=useRef()
 // }, [router.events]);  // Make sure to include router.events in the dependency array
 
   return (
-    <div style={{ height: "100vh", width: "100%", overflow: "hidden", position: "static" }}>
+<div 
+  className="h-screen w-full overflow-hidden fixed translate-y-0 md:translate-y-0 sm:translate-y-0 translate-y-[-10%] md:translate-y-0"
+>
       <Canvas
         gl={{ antialias: true }}
         shadows
@@ -249,10 +228,10 @@ const niceref=useRef()
       >
               {/* <Perf position={'top-left'} /> */}
         
-        <PerspectiveCamera ref={cameraref} makeDefault position={isMobile ? [0.5, -4, 60] : [0, -1, 50]} />
+        <PerspectiveCamera ref={cameraref} makeDefault position={isMobile ? [0.5, -6, 80] : [0, -1, 52.5]} />
         <color args={["#030608"]} attach="background" />
         <fog args={["rgba(2, 6, 8, 1)", 30, 10]} attach="fog" />
-      {/* <OrbitControls/> */}  
+       {/* <OrbitControls/>  */}
       
         <Suspense fallback={null}>
           
@@ -276,7 +255,8 @@ const niceref=useRef()
             />
             <Bloom
               blendFunction={BlendFunction.ALPHA}
-              intensity={5}
+              intensity={5}  
+
               kernelSize={KernelSize.HUGE}
               luminanceThreshold={0}
               luminanceSmoothing={0}
@@ -290,34 +270,21 @@ const niceref=useRef()
              />
           </EffectComposer>
 
-				
-          <group>
-            {!isMobile?<Sparkles
-      count={30}
-      size={7}
-      scale={[40,16,4]}
-      position-y={6}
-      position-z={5}
-
-      color={'rgb(15, 89, 126)'}
-      speed={1}
-    />:<Sparkles
-    count={10}
-    size={7}
-    scale={[40,16,4]}
-    position-y={6}
-    position-z={2}
-
-    color={'rgb(15, 89, 126)'}
-    speed={1}
-  />}
-        
-
-      </group>
+				  <Sparkles
+  count={40}
+  size={!isMobile?5:10}
+  scale={!isMobile?[100,10,2]:[20,30,20]}
+  position-y={6}
+  position-z={!isMobile?20:5}
+  color={'rgb(15, 89, 126)'}
+  speed={!isMobile?1:0}
+  blendFunction={BlendFunction.SCREEN}  // Experiment with different blend functions
+/>
+          
           <group ref={niceref}>
           <WaterSurfaceComplex
 					dimensions={400}
-					position={[0,-7.5,0]}
+					position={[0,-7.1,0]}
 					width={200}
 					length={200}
 					fxDistortionFactor={100}
@@ -344,19 +311,26 @@ const niceref=useRef()
               intensity={ 2}
             />
           
-            {/* Black Standard Mesh Box */}
-        
-            <Pole />
-            <mesh position={[0, -5, 2.5]} castShadow receiveShadow>
-          <boxGeometry args={[300, 500, 5]} /> {/* Box dimensions: width, height, depth */}
-          <meshStandardMaterial color={"#000a0a"} /> {/* Black color */}
-        </mesh>
+          <mesh position={[0, -5, 2.5]} castShadow receiveShadow>
+          <boxGeometry args={[300, 500, 5]} /> 
+          <meshStandardMaterial color={"#000a0a"} /> 
+        </mesh>        
+            <Pole buttonTrigger={buttonTrigger}/>
+          
             <NewScene/>
 
-            <group >
+            <group  >
               {smokeData.map((data, index) => (
                 <group key={index} position={data.position}>
-                  <Smoke texture={data.texture} />
+                  <Smoke texture={data.texture} alphaValue={data.alphaValue} />
+                </group>
+                
+              ))}
+            </group>
+            <group scale={[0.5,0.4,0.45]}>
+              {smokeDataSecond.map((data, index) => (
+                <group key={index} position={data.position}>
+                  <Smoke texture={data.texture} alphaValue={data.alphaValue} />
                 </group>
                 
               ))}
